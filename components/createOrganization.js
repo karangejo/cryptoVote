@@ -1,0 +1,52 @@
+import React, { Component } from 'react';
+import orgFactory from '../ethereum/organizationFactory';
+import { Form, Button, Input, Message } from 'semantic-ui-react';
+import web3 from '../ethereum/web3';
+import { Router } from '../routes';
+
+class CreateOrg extends Component {
+  state = {
+    errorMessage: '',
+    orgName: '',
+    loading: false
+  }
+
+  onSubmit = async (event) => {
+    event.preventDefault();
+    this.setState({loading:true,errorMessage: ''});
+    try{
+      const accounts = await web3.eth.getAccounts();
+      await orgFactory.methods
+        .createOrganization(this.state.orgName)
+        .send({
+          from: accounts[0]
+        });
+      Router.pushRoute('/');
+    } catch (err) {
+      this.setState({errorMessage: err.message});
+    }
+    this.setState({loading:false});
+  };
+
+
+  render() {
+    return (
+      <Form onSubmit={this.onSubmit} error={!!this.state.errorMessage}>
+      <Form.Field>
+        <label>Enter the Name of Your Organization</label>
+        <Input
+          label="Org Name"
+          labelPosition="right"
+          value={this.state.orgName}
+          onChange={event =>
+            this.setState({orgName: event.target.value})}
+        />
+      </Form.Field>
+      <Message error header="Oops!" content={this.state.errorMessage}/>
+      <Button loading={this.state.loading} primary>Create</Button>
+    </Form>
+    );
+  }
+}
+
+export default CreateOrg;
